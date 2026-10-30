@@ -76,8 +76,9 @@ export async function fetchApprovalLogs({ chain, owner, rpc, days = 3, fetchImpl
       return { logs: dedupe(logs), source: label, full: true, errors };
     } catch (e) { errors.push(e.message); }
   }
-  const logs = await rpcLogs({ rpc, chain, topics: [[TOPIC_APPROVAL, TOPIC_APPROVAL_FOR_ALL], ownerTopic], days, onProgress });
-  return { logs: dedupe(logs), source: `rpc (last ${days}d)`, full: false, errors };
+  const clamped = !rpc.custom && chain.logDays && days > chain.logDays ? chain.logDays : days;
+  const logs = await rpcLogs({ rpc, chain, topics: [[TOPIC_APPROVAL, TOPIC_APPROVAL_FOR_ALL], ownerTopic], days: clamped, onProgress });
+  return { logs: dedupe(logs), source: `rpc (last ${clamped}d${clamped < days ? `, public RPC keeps no more` : ''})`, full: false, errors };
 }
 
 /**

@@ -18,7 +18,7 @@ export async function scan({ chain, owner, rpc, archive, days = 3, staleDays = 1
     const c = classify(f, { staleDays, now });
     return { ...a, spenderName: f.name || f.explorer?.contractName || f.flagged?.name || null, level: c.level, reasons: c.reasons, unsure: Boolean(c.unsure), spenderInfo: f };
   }).sort((a, b) => RANK[a.level] - RANK[b.level] || (b.timestamp || 0) - (a.timestamp || 0));
-  const counts = { ZOMBIE: 0, GHOST: 0, STALE: 0, ALIVE: 0 };
-  for (const a of approvals) counts[a.level]++;
+  const counts = { ZOMBIE: 0, GHOST: 0, STALE: 0, ALIVE: 0, unsure: 0 };
+  for (const a of approvals) { counts[a.level]++; if (a.unsure) counts.unsure++; }
   return { chain: chain.key, chainId: chain.id, owner, source, fullHistory: full, sourceErrors: errors, events: logs.length, staleDays, counts, approvals };
 }

@@ -83,6 +83,7 @@ async function main() {
     let chain;
     try { chain = resolveChain(k.trim()); } catch (e) { console.error(e.message); process.exit(1); }
     const rpc = makeRpc(o.rpc ? [o.rpc] : chain.rpc);
+    rpc.custom = Boolean(o.rpc);
     try {
       const r = await scan({ chain, owner, rpc, days: o.days, staleDays: o.staleDays, probeHours: o.probeHours, apiKey: process.env.ETHERSCAN_API_KEY,
         onProgress: o.json || o.md || !process.stderr.isTTY ? undefined : (p) => process.stderr.write(`\r  reading ${chain.key} approvals ${Math.round(p * 100)}%`) });

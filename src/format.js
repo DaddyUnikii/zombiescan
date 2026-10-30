@@ -27,9 +27,11 @@ export function age(ts, now = Date.now() / 1000) {
 const tokenLabel = (a) => a.symbol || a.tokenName || short(a.token);
 const spenderLabel = (a) => (a.spenderName ? `${a.spenderName} (${short(a.spender)})` : a.spender);
 
+const unsureNote = (r) => (r.counts.unsure ? `, ${r.counts.unsure} not fully checked` : '');
+
 export function summaryLine(r) {
   const n = r.counts;
-  return `${r.chain}: ${n.ZOMBIE} zombie · ${n.GHOST} ghost · ${n.STALE} stale · ${n.ALIVE} alive (${r.approvals.length} live approvals)`;
+  return `${r.chain}: ${n.ZOMBIE} zombie · ${n.GHOST} ghost · ${n.STALE} stale · ${n.ALIVE} alive${unsureNote(r)} (${r.approvals.length} live approvals)`;
 }
 
 export function renderReport(r, { showCalldata = false, showAll = false } = {}) {
@@ -50,7 +52,8 @@ export function renderReport(r, { showCalldata = false, showAll = false } = {}) 
   }
   lines.push('');
   const n = r.counts;
-  lines.push(`${red(n.ZOMBIE + ' zombie')} · ${magenta(n.GHOST + ' ghost')} · ${yellow(n.STALE + ' stale')} · ${green(n.ALIVE + ' alive')}${!showAll && n.ALIVE ? dim('  (--all to list alive ones)') : ''}`);
+  lines.push(`${red(n.ZOMBIE + ' zombie')} · ${magenta(n.GHOST + ' ghost')} · ${yellow(n.STALE + ' stale')} · ${green(n.ALIVE + ' alive')}${dim(unsureNote(r))}${!showAll && n.ALIVE ? dim('  (--all to list alive ones)') : ''}`);
+  if (n.unsure) lines.push(dim(`${n.unsure} alive ones had no explorer data and nothing in the RPC probe window; ETHERSCAN_API_KEY gives a full check`));
   if (shown.length) lines.push(dim(`Revoke in one place: https://revoke.cash/address/${r.owner}?chainId=${r.chainId}  (or --calldata)`));
   return lines.join('\n');
 }
@@ -61,7 +64,7 @@ export function toJSON(r) {
 
 export function toMarkdown(r, { showCalldata = false, showAll = false } = {}) {
   const out = [`### ${r.chain} · \`${r.owner}\``, '', `Source: ${r.source} · ${r.events} approval events · stale after ${r.staleDays}d`, '',
-    `**${r.counts.ZOMBIE}** 🧟 zombie · **${r.counts.GHOST}** 👻 ghost · **${r.counts.STALE}** 🕸️ stale · **${r.counts.ALIVE}** 🟢 alive`, ''];
+    `**${r.counts.ZOMBIE}** 🧟 zombie · **${r.counts.GHOST}** 👻 ghost · **${r.counts.STALE}** 🕸️ stale · **${r.counts.ALIVE}** 🟢 alive${unsureNote(r)}`, ''];
   if (!r.approvals.length) return out.concat('✅ No live approvals at all. Nothing is haunting this wallet.').join('\n');
   const shown = r.approvals.filter((a) => showAll || a.level !== 'ALIVE');
   if (!shown.length) return out.concat(`✅ No ghosts. All ${r.approvals.length} live approvals go to contracts that are still alive.`).join('\n');
