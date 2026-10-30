@@ -82,6 +82,7 @@ zombiescan <address> [options]
       --fail-on <level>  exit 2 if anything is at/above zombie|ghost|stale (for CI)
       --json             machine-readable output
       --markdown         markdown table (great for GitHub job summaries)
+      --chains           list supported chains and how far keyless history reaches
   -v, --version          print the version
 ```
 

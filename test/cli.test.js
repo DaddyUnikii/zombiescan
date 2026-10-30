@@ -20,3 +20,11 @@ test('bad input exits 1 without touching the network', () => {
   assert.equal(spawnSync(process.execPath, [BIN, '0x' + '1'.repeat(40), '--fail-on', 'alive']).status, 1);
   assert.equal(spawnSync(process.execPath, [BIN, '0x' + '1'.repeat(40), '--stale-days', '0']).status, 1);
 });
+
+test('--chains lists every supported chain offline', () => {
+  const out = execFileSync(process.execPath, [BIN, '--chains']).toString();
+  for (const w of ['eth', 'bsc', 'base', 'arb', 'op', 'polygon', 'ETHERSCAN_API_KEY']) assert.ok(out.includes(w), w);
+  const rows = JSON.parse(execFileSync(process.execPath, [BIN, '--chains', '--json']).toString());
+  assert.equal(rows.length, 6);
+  assert.deepEqual(rows.find((r) => r.key === 'bsc').id, 56);
+});

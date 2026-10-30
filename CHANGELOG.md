@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `--chains` lists the supported chains (key, chain id, native coin) and how far each one reads history without an `ETHERSCAN_API_KEY`; add `--json` for machine-readable output. Works offline.
+
 ## 0.1.0 — 2026-10-30
 
 - First release: find live ERC-20 / ERC-721 / ERC-1155 approvals on Ethereum, BNB Chain, Base, Arbitrum, Optimism and Polygon, and say which spenders are ghosts.
