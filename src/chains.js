@@ -1,6 +1,7 @@
 // Chain registry. Every RPC here is a free public endpoint; pass --rpc to use your own.
 //   rpc        endpoints that answer topic-only eth_getLogs (needed to find approvals without an API key)
 //   archive    endpoints that answer state at old blocks (used to prove a dead spender once had code)
+//   logDays    how far back the keyless log RPCs keep history (longer --days is clamped)
 //   blockscout keyless etherscan-compatible API, when the chain has one that answers scripts
 export const CHAINS = {
   eth: { id: 1, name: 'Ethereum', native: 'ETH', blockTime: 12,
@@ -9,7 +10,7 @@ export const CHAINS = {
     blockscout: 'https://eth.blockscout.com/api', explorer: 'https://etherscan.io' },
   bsc: { id: 56, name: 'BNB Chain', native: 'BNB', blockTime: 0.45,
     rpc: ['https://rpc-bsc.48.club', 'https://bsc-rpc.publicnode.com', 'https://bsc.drpc.org', 'https://bsc.rpc.blxrbdn.com'],
-    archive: [], explorer: 'https://bscscan.com' },
+    archive: [], logDays: 5.5, explorer: 'https://bscscan.com' }, // 48 Club keeps ~6 days of logs
   base: { id: 8453, name: 'Base', native: 'ETH', blockTime: 2,
     rpc: ['https://base.gateway.tenderly.co', 'https://base-rpc.publicnode.com', 'https://mainnet.base.org'],
     archive: ['https://base.gateway.tenderly.co'],
