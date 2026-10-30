@@ -17,3 +17,5 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: npm test
+      - run: node bin/zombiescan.js --help
+      - run: node bin/zombiescan.js --version

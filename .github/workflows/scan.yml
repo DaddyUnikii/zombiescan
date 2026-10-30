@@ -1,0 +1,58 @@
+name: Scan wallet
+# Run from the Actions tab (works from your phone): pick a wallet + chains, read the report in the run summary.
+# Add an ETHERSCAN_API_KEY repository secret for full history and activity checks on every chain.
+on:
+  workflow_dispatch:
+    inputs:
+      address:
+        description: Wallet address to scan
+        required: true
+      chains:
+        description: "Chains, comma separated (bsc, eth, base, arb, op, polygon or all)"
+        default: bsc
+      stale_days:
+        description: Days without activity before a contract counts as STALE
+        default: "180"
+      days:
+        description: Days of history when only RPC is available
+        default: "3"
+      calldata:
+        description: Add revoke calldata to the report
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Hunt for zombie approvals
+        env:
+          ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
+          ADDRESS: ${{ inputs.address }}
+          CHAINS: ${{ inputs.chains }}
+          STALE_DAYS: ${{ inputs.stale_days }}
+          DAYS: ${{ inputs.days }}
+          CALLDATA: ${{ inputs.calldata }}
+        run: |
+          set +e
+          extra=""
+          [ "$CALLDATA" = "true" ] && extra="--calldata"
+          node bin/zombiescan.js "$ADDRESS" -c "$CHAINS" -d "$DAYS" -s "$STALE_DAYS" --markdown $extra > report.md 2> status.txt
+          code=$?
+          cat report.md
+          { echo "## 🧟 zombiescan"; echo; cat report.md; } >> "$GITHUB_STEP_SUMMARY"
+          # one annotation per chain, visible on the run page without opening the logs
+          while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            case "$line" in
+              *failed*) echo "::warning title=zombiescan::$line" ;;
+              *": 0 zombie · 0 ghost"*) echo "::notice title=zombiescan::$line" ;;
+              *) echo "::warning title=zombiescan::$line" ;;
+            esac
+          done < status.txt
+          exit $code

@@ -19,14 +19,20 @@ async function gate(gapMs) { // one explorer request at a time, spaced out: free
   if (at > now) await sleep(at - now);
 }
 
+const exhausted = new Set(); // explorers that kept rate-limiting us this run: stop asking, fall back to RPC
+
 export async function explorerGet(url, { fetchImpl = globalThis.fetch, label = 'explorer', gapMs = 350 } = {}) {
+  const host = new URL(url).host;
+  if (exhausted.has(host)) throw new Error(`${label}: rate-limited earlier in this run`);
   let res, text;
   for (let attempt = 0; ; attempt++) {
     if (fetchImpl === globalThis.fetch) await gate(gapMs);
     res = await fetchImpl(url);
     text = await res.text();
-    if ((res.status !== 429 && !/rate limit|too many|max calls|something went wrong/i.test(text)) || attempt >= 6) break;
-    await sleep(3000 * (attempt + 1)); // keyless explorers and free keys rate-limit per IP
+    const limited = res.status === 429 || /rate limit|too many|max calls|something went wrong/i.test(text);
+    if (!limited) break;
+    if (attempt >= 4) { exhausted.add(host); break; }
+    await sleep(2500 * (attempt + 1)); // keyless explorers and free keys rate-limit per IP
   }
   let body;
   try { body = JSON.parse(text); } catch { throw new Error(`${label} returned non-JSON (HTTP ${res.status})`); }
@@ -78,7 +84,7 @@ export async function fetchApprovalLogs({ chain, owner, rpc, days = 3, fetchImpl
  * eth_getLogs over the last `days` (or `blocks`), in parallel chunks.
  * A chunk an RPC refuses (range or result caps differ per provider) is split in half and retried.
  */
-export async function rpcLogs({ rpc, chain, topics, days, blocks, address, onProgress = () => {}, step = 5000, concurrency = 4 }) {
+export async function rpcLogs({ rpc, chain, topics, days, blocks, address, onProgress = () => {}, step = 5000, concurrency = 3 }) {
   const latest = parseInt(await rpc.call('eth_blockNumber', []), 16);
   const span = blocks ?? Math.ceil((days * 86400) / chain.blockTime);
   const start = Math.max(0, latest - span);
@@ -89,7 +95,7 @@ export async function rpcLogs({ rpc, chain, topics, days, blocks, address, onPro
   const logs = [];
   const worker = async () => {
     while (queue.length) {
-      const [from, to] = queue.shift();
+      const [from, to, tries = 0] = queue.shift();
       try {
         const got = await rpc.call('eth_getLogs', [{
           fromBlock: '0x' + from.toString(16), toBlock: '0x' + to.toString(16), topics, ...(address ? { address } : {}),
@@ -98,7 +104,8 @@ export async function rpcLogs({ rpc, chain, topics, days, blocks, address, onPro
         done += to - from + 1;
         onProgress(done / total);
       } catch (e) {
-        if (to - from + 1 <= 250) throw e;
+        if (!e.range && tries < 3) { await sleep(2000 * (tries + 1)); queue.push([from, to, tries + 1]); continue; } // busy RPC: retry later
+        if (to - from + 1 <= 250) { e.message = `no RPC could serve blocks ${from}-${to} (${e.message})`; throw e; }
         const mid = from + Math.floor((to - from) / 2);
         queue.unshift([from, mid], [mid + 1, to]);
       }
