@@ -26,6 +26,7 @@ Options
       --fail-on <level>  exit 2 if anything is at/above zombie|ghost|stale (for CI)
       --json             machine-readable output
       --markdown         markdown table (great for GitHub job summaries)
+      --chains           list supported chains and how far keyless history reaches
   -v, --version          print the version
   -h, --help             show this help
 
@@ -57,6 +58,7 @@ function parse(argv) {
     else if (a === '--fail-on') o.failOn = next().toUpperCase();
     else if (a === '--json') o.json = true;
     else if (a === '--markdown' || a === '--md') o.md = true;
+    else if (a === '--chains') o.listChains = true;
     else if (a.startsWith('-')) throw new Error(`unknown option ${a}`);
     else pos.push(a);
   }
@@ -64,10 +66,29 @@ function parse(argv) {
   return o;
 }
 
+function chainTable() {
+  return Object.entries(CHAINS).map(([key, c]) => ({
+    key, id: c.id, name: c.name, native: c.native,
+    keyless: c.blockscout ? 'full history (Blockscout)' : c.logDays ? `last ~${c.logDays} days (RPC logs)` : 'RPC logs (--days)',
+    archive: c.archive.length > 0,
+  }));
+}
+
+function renderChains() {
+  const rows = chainTable();
+  const w = (k) => Math.max(k.length, ...rows.map((r) => String(r[k]).length));
+  const cols = ['key', 'id', 'name', 'native', 'keyless'];
+  const head = Object.fromEntries(cols.map((k) => [k, k === 'keyless' ? 'without ETHERSCAN_API_KEY' : k]));
+  const hw = (k) => Math.max(w(k), head[k].length);
+  const fmt = (r) => cols.map((k) => String(r[k]).padEnd(hw(k))).join('  ').trimEnd();
+  return [fmt(head), ...rows.map(fmt), '', 'With ETHERSCAN_API_KEY every chain reads full history.'].join('\n');
+}
+
 async function main() {
   let o;
   try { o = parse(process.argv.slice(2)); } catch (e) { console.error(e.message); process.exit(1); }
   if (o.version) { console.log(VERSION); process.exit(0); }
+  if (o.listChains) { console.log(o.json ? JSON.stringify(chainTable(), null, 2) : renderChains()); process.exit(0); }
   if (o.help || !o.address) { console.log(HELP); process.exit(o.help ? 0 : 1); }
   if (!isAddress(o.address)) { console.error('not an EVM address: ' + o.address); process.exit(1); }
   if (!(o.days > 0)) { console.error('--days must be a positive number'); process.exit(1); }
