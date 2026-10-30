@@ -1,0 +1,25 @@
+{
+  "name": "zombiescan",
+  "version": "0.1.0",
+  "description": "Zero-dependency CLI that finds zombie token approvals: allowances your wallet still gives to dead, empty, abandoned or exploited spenders on EVM chains.",
+  "type": "module",
+  "bin": {
+    "zombiescan": "bin/zombiescan.js"
+  },
+  "main": "src/scan.js",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": ["evm", "approvals", "allowance", "revoke", "zombie", "ghost", "selfdestruct", "proxy", "security", "wallet", "ethereum", "bsc", "cli", "web3", "halloween"],
+  "author": "Unikii (https://github.com/DaddyUnikii)",
+  "license": "MIT",
+  "files": ["bin", "src", "README.md", "LICENSE", "CHANGELOG.md"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DaddyUnikii/zombiescan.git"
+  },
+  "homepage": "https://github.com/DaddyUnikii/zombiescan#readme"
+}
