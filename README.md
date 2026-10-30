@@ -20,8 +20,25 @@ whoever brings that address back to life, or holds that key, can move your token
 `zombiescan` finds every live ERC-20 / ERC-721 / ERC-1155 approval on a wallet and asks one question about each
 spender: **is anything really alive in there?** 👻
 
+Real output from the **Scan wallet** workflow on vitalik.eth (Ethereum, keyless Blockscout, 30 Oct 2026,
+[run](https://github.com/DaddyUnikii/zombiescan/actions/runs/41000171034); table trimmed to 6 of 9 rows, calldata column moved below):
+
+> Source: blockscout · 4616 approval events · stale after 180d
+>
+> **0** 🧟 zombie · **3** 👻 ghost · **6** 🕸️ stale · **2182** 🟢 alive, 24 not fully checked
+
+| Level | Token | Allowance | Spender | Age | Why |
+|---|---|---|---|---|---|
+| 👻 GHOST | AI WEB3 | 98,991,000,000,000,000 | `0x2207eea3ae68cdbbb7bdc2e624d9ad2ca886cea6` | 3y | spender is a plain wallet (EOA, 29 txs sent): whoever holds that key can pull your tokens |
+| 👻 GHOST | VISH | Unlimited | `0x5c14cee5849e3959bfc5b506f9ca1b7089aeea2f` | 4y | spender is a plain wallet (EOA, 14 txs sent): whoever holds that key can pull your tokens |
+| 👻 GHOST | APE | 2,967,928,298,073.3337 | `0x9c2a328a8862f111e74f4e37380e35c63a8f7fe0` | 4y | spender is a plain wallet (EOA, 377 txs sent): whoever holds that key can pull your tokens |
+| 🕸️ STALE | 0xc66e…4a6d | 99949000000000000000000 | `0x364d85d117b9908adf6a441dc12638bda963fc01` | 10y | no activity for 3695 days (last 2016-09-16) |
+| 🕸️ STALE | 0xecf8…d6a7 | 99,973,494,167,220,120,100,000 | `0x364d85d117b9908adf6a441dc12638bda963fc01` | 10y | no activity for 3695 days (last 2016-09-16) |
+| 🕸️ STALE | 0xecf8…d6a7 | 99,975,658,000,000,000,000,000 | `0xc8b976247a04025e24ff5f078b80a4cb42a579db` | 10y | no activity for 3702 days (last 2016-09-09) |
+
 ```text
-DEMO_PLACEHOLDER
+# --calldata for the first row (zombiescan prints it, your wallet would send it)
+to 0x0b037269d25c48304482d3e2e7c66590fdfda8d6 data 0x095ea7b30000000000000000000000002207eea3ae68cdbbb7bdc2e624d9ad2ca886cea60000000000000000000000000000000000000000000000000000000000000000
 ```
 
 ## Levels
