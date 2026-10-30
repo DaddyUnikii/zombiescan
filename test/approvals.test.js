@@ -78,7 +78,7 @@ test('fetchApprovalLogs falls back to chunked RPC logs when no explorer answers'
     eth_blockNumber: () => hex(10000),
     eth_getLogs: ([q]) => {
       calls.push(q);
-      if (parseInt(q.toBlock, 16) - parseInt(q.fromBlock, 16) >= 2500) throw new Error('block range too large');
+      if (parseInt(q.toBlock, 16) - parseInt(q.fromBlock, 16) >= 2500) throw Object.assign(new Error('block range too large'), { range: true });
       return parseInt(q.fromBlock, 16) === 9000 ? [log({ i: 1, block: 9001, address: TOKEN, topics: [TOPIC_APPROVAL, t(OWNER), t(SPENDER)], data: '0x' })] : [];
     },
   });
